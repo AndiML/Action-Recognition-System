@@ -3,10 +3,12 @@
 from argparse import ArgumentParser
 
 from action_recognition.commands.base import BaseCommandDescriptor
+# from action_recognition.src.datasets import DATASET_IDS, DEFAULT_DATASET_ID
+#from action_recognition.src.nn import DEFAULT_MODEL_ID, MODEL_IDS
 
 
 class DataGeneratorCommandDescriptor(BaseCommandDescriptor):
-    """Represents the description of federated averaging algorithm command."""
+    """Represents the description of data generation command."""
 
     def get_name(self) -> str:
         """Gets the name of the command.
@@ -45,3 +47,36 @@ class DataGeneratorCommandDescriptor(BaseCommandDescriptor):
             nargs='+',
             help='The the actions as strings the user want to create data for.'
         )
+        parser.add_argument(
+            '-v',
+            '--number_of_videos',
+            type=int,
+            default=10,
+            help="The number of video that will be created for each action. Defaults to 10."
+        )
+
+        parser.add_argument(
+            '-f',
+            '--number_of_frames',
+            type=int,
+            default=24,
+            help="The number of frames each utilizes for capturing a specific action. Default to 24."
+        )
+
+        parser.add_argument(
+            '-d',
+            '--minimum_detection_confidence',
+            type=float,
+            default=0.5,
+            help="Minimum confidence value ([0.0, 1.0]) from the person-detection model for the detection to be considered successful. Default to 0.5."
+        )
+
+        parser.add_argument(
+            '-t',
+            '--minimum_tracking_confidence',
+            type=float,
+            default=0.5,
+            help="""Minimum confidence value ([0.0, 1.0]) from the landmark-tracking model for the pose landmarks to be considered tracked successfully.
+                Default to 0.5."""
+        )
+
