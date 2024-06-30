@@ -1,6 +1,8 @@
 import os
+import logging
 from typing import Tuple
 from matplotlib import pyplot as plt
+
 import torch
 import torch.utils.data
 
@@ -13,11 +15,12 @@ class ModelTrainer:
         criterion: torch.nn.Module,
         optimizer: torch.optim.Optimizer,
         device: str,
-        logger,
-        training_data: torch.Tensor,
+        logger: logging.Logger,
+        data: torch.Tensor,
         labels: torch.Tensor,
+        test_split: float = 0.1,
+        validation_split: float = 0.1,
         batch_size: int = 1,
-        validation_split: float = 0.05
     ) -> None:
         """
         Initializes a new ModelTrainer instance.
@@ -28,11 +31,12 @@ class ModelTrainer:
             criterion (torch.nn.Module): Loss function to calculate loss.
             optimizer (torch.optim.Optimizer): Optimizer for updating model parameters.
             device (str): The device where training and inference are carried out.
-            logger: Logger for logging training information.
-            training_data (torch.Tensor): Tensor containing the training data.
-            labels (torch.Tensor): Tensor containing the labels corresponding to the training data.
-            batch_size (int): Batch size for DataLoader (default: 1).
-            validation_split (float): Fraction of the data to be used as validation set (default: 0.05).
+            logger (logging.Logger): Logger for logging training information.
+            data (torch.Tensor): Tensor containing the data.
+            labels (torch.Tensor): Tensor containing the labels corresponding to the data.
+            test_split (float): Fraction of the data to be used as test set (default: 0.1).
+            validation_split (float): Fraction of the data to be used as validation set (default: 0.1).
+            batch_size (int): Batch size for DataLoader (default: 32).
         """
         self.output_path = output_path
         self.model = model
@@ -43,65 +47,79 @@ class ModelTrainer:
         self.model.to(self.device)
         self.val_losses: list[float] = []
         self.val_accuracies: list[float] = []
-        self.train_loader, self.val_loader = self.create_dataloaders(training_data, labels, batch_size, validation_split)
+
+        self.train_loader, self.val_loader, self.test_loader = self.create_dataloaders(
+            data, labels, batch_size, validation_split, test_split
+        )
 
     def create_dataloaders(
         self,
-        training_data: torch.Tensor,
+        data: torch.Tensor,
         labels: torch.Tensor,
-        batch_size: int = 1,
-        validation_split: float = 0.05
-    ) -> Tuple[torch.utils.data.DataLoader, torch.utils.data.DataLoader]:
+        batch_size: int = 32,
+        validation_split: float = 0.1,
+        test_split: float = 0.1,
+    ) -> Tuple[torch.utils.data.DataLoader, torch.utils.data.DataLoader, torch.utils.data.DataLoader]:
         """
-        Create PyTorch DataLoader instances for training and validation.
+        Create PyTorch DataLoader instances for training, validation, and test sets.
 
         Args:
-            training_data (torch.Tensor): Tensor containing the training data.
-            labels (torch.Tensor): Tensor containing the labels corresponding to the training data.
-            batch_size (int): Batch size for DataLoader (default: 1).
-            validation_split (float): Fraction of the data to be used as validation set (default: 0.05).
+            data (torch.Tensor): Tensor containing the data.
+            labels (torch.Tensor): Tensor containing the labels corresponding to the data.
+            batch_size (int): Batch size for DataLoader (default: 32).
+            validation_split (float): Fraction of the data to be used as validation set (default: 0.1).
+            test_split (float): Fraction of the data to be used as test set (default: 0.1).
 
         Returns:
             train_loader (torch.utils.data.DataLoader): DataLoader for training set.
             val_loader (torch.utils.data.DataLoader): DataLoader for validation set.
+            test_loader (torch.utils.data.DataLoader): DataLoader for test set.
         """
-        dataset = torch.utils.data.TensorDataset(training_data, labels)
+        dataset = torch.utils.data.TensorDataset(data, labels)
+        test_size = int(len(dataset) * test_split)
         val_size = int(len(dataset) * validation_split)
-        train_size = len(dataset) - val_size
-        train_dataset, val_dataset = torch.utils.data.random_split(dataset, [train_size, val_size])
+        train_size = len(dataset) - test_size - val_size
+
+        train_dataset, val_dataset, test_dataset = torch.utils.data.random_split(
+            dataset, [train_size, val_size, test_size]
+        )
 
         train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
         val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+        test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
-        return train_loader, val_loader
+        return train_loader, val_loader, test_loader
 
-    def evaluate_model(self) -> Tuple[float, float]:
+    def evaluate_model(self, loader: torch.utils.data.DataLoader) -> Tuple[float, float]:
         """
-        Evaluate the model on the validation set.
+        Evaluate the model on the given data loader.
+
+        Args:
+            loader (torch.utils.data.DataLoader): DataLoader for evaluation.
 
         Returns:
-            val_loss (float): Average loss on the validation set.
-            accuracy (float): Accuracy on the validation set.
+            loss (float): Average loss on the dataset.
+            accuracy (float): Accuracy on the dataset.
         """
         self.model.eval()
-        val_loss = 0.0
+        total_loss = 0.0
         correct_predictions = 0
         total_predictions = 0
 
         with torch.no_grad():
-            for inputs, labels in self.val_loader:
+            for inputs, labels in loader:
                 inputs, labels = inputs.to(self.device), labels.to(self.device)
                 outputs = self.model(inputs)
                 loss = self.criterion(outputs, labels)
-                val_loss += loss.item()
+                total_loss += loss.item()
 
                 _, predicted = torch.max(outputs, 1)
                 correct_predictions += (predicted == labels).sum().item()
                 total_predictions += labels.size(0)
 
-        val_loss /= total_predictions
+        average_loss = total_loss / total_predictions
         accuracy = correct_predictions / total_predictions
-        return val_loss, accuracy
+        return average_loss, accuracy
 
     def train_model(
         self,
@@ -137,7 +155,7 @@ class ModelTrainer:
                 number_of_datapoints += labels.size(0)
 
             epoch_loss = running_loss / number_of_datapoints
-            val_loss, val_accuracy = self.evaluate_model()
+            val_loss, val_accuracy = self.evaluate_model(self.val_loader)
             self.val_losses.append(val_loss)
             self.val_accuracies.append(val_accuracy)
 
@@ -179,3 +197,15 @@ class ModelTrainer:
 
         plt.tight_layout()
         plt.savefig(os.path.join(self.output_path, 'statistics.png'))
+
+    def evaluate_on_test_set(self) -> Tuple[float, float]:
+        """
+        Evaluate the model on the test set.
+
+        Returns:
+            test_loss (float): Average loss on the test set.
+            test_accuracy (float): Accuracy on the test set.
+        """
+        test_loss, test_accuracy = self.evaluate_model(self.test_loader)
+        self.logger.info(f'Test Loss: {test_loss:.4f}, Test Accuracy: {test_accuracy:.4f}')
+        return test_loss, test_accuracy

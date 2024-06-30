@@ -41,8 +41,8 @@ def create_dataset(dataset_path: str) -> Tuple[torch.tensor, torch.tensor]:
     labels = numpy.array(labels)
 
     # Convert to tensor after conversion to numpy for performance enhancement
-    training_data = torch.tensor(training_data)
-    labels = torch.tensor(labels)
+    training_data = torch.tensor(training_data, dtype=torch.float32)
+    labels = torch.tensor(labels, dtype=torch.long)
 
     return training_data, labels
 
