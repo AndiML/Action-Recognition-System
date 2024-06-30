@@ -1,3 +1,4 @@
+import os
 from typing import Tuple
 from matplotlib import pyplot as plt
 import torch
@@ -119,6 +120,7 @@ class ModelTrainer:
         """
         best_loss = float('inf')
         patience_counter = 0
+        model_path = os.path.join(self.output_path, 'best_model.pth')
         number_of_datapoints = 0
         self.model.train()
         for epoch in range(num_epochs):
@@ -144,7 +146,7 @@ class ModelTrainer:
             if val_loss < best_loss:
                 best_loss = val_loss
                 patience_counter = 0
-                torch.save(self.model.state_dict(), self.output_path)
+                torch.save(self.model.state_dict(), model_path)
             else:
                 patience_counter += 1
 
@@ -152,7 +154,7 @@ class ModelTrainer:
                 self.logger.info("Early stopping triggered")
                 break
 
-        self.model.load_state_dict(torch.load(self.output_path))
+        self.model.load_state_dict(torch.load(model_path))
         return self.model
 
     def plot_metrics(self) -> None:
@@ -176,4 +178,4 @@ class ModelTrainer:
         plt.legend()
 
         plt.tight_layout()
-        
+        plt.savefig(os.path.join(self.output_path, 'statistics.png'))
