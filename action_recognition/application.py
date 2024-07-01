@@ -1,6 +1,7 @@
 """Represents a module that contains the application."""
 
 import os
+import shutil
 import sys
 import random
 import logging
@@ -13,6 +14,37 @@ from action_recognition.commands import get_command_descriptors, get_command
 
 __version__ = '0.1.0'
 """Contains the version number of the application."""
+
+class SectioningFormatter(logging.Formatter):
+    """Represents a logger formatting, which allows the user to separate log messages into sections by adding horizontal rulers."""
+
+    def format(self, record: logging.LogRecord) -> str:
+        """Formats the specified log record as text. If the caller specified that a section should be started or ended, then a horizontal ruler will
+        be added before or after the log message respectively.
+
+        Args:
+            record (logging.LogRecord): The log record that is to be formatted as text.
+
+        Returns:
+            str: Returns the formatted log record.
+        """
+
+        # Gets the width of the terminal, which is the width in characters that the horizontal ruler should have
+        terminal_width, _ = shutil.get_terminal_size()
+
+        # Uses the base class implementation of the format method to format the record
+        formatted_log_record = super().format(record)
+
+        # If the caller requested that a new section should be begun or the current section should be ended, then horizontal rulers (consisting of as
+        # many dashes as the terminal is wide) are added before and/or after the formatted log record
+        if hasattr(record, 'start_section') and record.start_section:
+            formatted_log_record = f'{"-" * terminal_width}{os.linesep}{formatted_log_record}'
+        if hasattr(record, 'end_section') and record.end_section:
+            formatted_log_record = f'{formatted_log_record}{os.linesep}{"-" * terminal_width}'
+
+        # Returns the formatted log record
+        return formatted_log_record
+
 
 class Application:
     """Represents the command line application."""
@@ -87,12 +119,16 @@ class Application:
             'critical': logging.CRITICAL
         }
         root_logger.setLevel(logging_level_map[logging_level])
+        # Adds a console logging handler to the application logger and an optional file handler
+        sectioning_formatter = SectioningFormatter('%(asctime)s - %(name).45s - %(levelname)s - %(message)s')
         console_logging_handler = logging.StreamHandler(sys.stdout)
         console_logging_handler.setLevel(logging_level_map[logging_level])
+        console_logging_handler.setFormatter(sectioning_formatter)
         root_logger.addHandler(console_logging_handler)
         if log_file_path is not None:
             file_logging_handler = logging.FileHandler(log_file_path)
             file_logging_handler.setLevel(logging_level_map[logging_level])
+            file_logging_handler.setFormatter(sectioning_formatter)
             root_logger.addHandler(file_logging_handler)
 
         # Returns the application logger
