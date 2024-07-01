@@ -1,9 +1,9 @@
 """A sub-package that contains models and algorithms for generating the model for training."""
 
 from action_recognition.src.nn.lstm import LSTM
-from action_recognition.src.nn.transformer import Transformer
+from action_recognition.src.nn.transformer import ActionRecognitionTransformer
 
-MODEL_IDS = [LSTM.model_id, Transformer.model_id]
+MODEL_IDS = [LSTM.model_id, ActionRecognitionTransformer.model_id]
 """Contains the IDs of all available model architectures."""
 
 DEFAULT_MODEL_ID = LSTM.model_id
