@@ -156,17 +156,17 @@ class TrainActionRecognitionModelCommandDescriptor(BaseCommandDescriptor):
             choices=MODEL_IDS,
             help='Type of neural network architecture used for training. '
         )
-    
+
         parser.add_argument(
-            '-v'
-            '--validation_split', 
-            type=float, 
+            '-V',
+            '--validation_split',
+            type=float,
             default=0.05,
             help='Fraction of the data to be used as validation set. Default to 0.05.'
         )
-        
+
         parser.add_argument(
-            '-T'
+            '-T',
             '--test_split', 
             type=float, 
             default=0.05, 

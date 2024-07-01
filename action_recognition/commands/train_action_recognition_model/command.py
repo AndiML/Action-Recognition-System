@@ -2,6 +2,8 @@
 
 import logging
 from argparse import Namespace
+import os
+import yaml
 
 import numpy
 import torch
@@ -9,7 +11,7 @@ import torch
 from action_recognition.commands.base import BaseCommand
 from action_recognition.src.training import ModelTrainer
 from action_recognition.src.dataset.data_generator import create_dataset
-from action_recognition.src.nn.model_generator import create_lstm_model
+from action_recognition.src.nn.model_generator import create_lstm_model, create_transformer_model
 
 
 class TrainActionRecognitionModelCommand(BaseCommand):
@@ -26,16 +28,23 @@ class TrainActionRecognitionModelCommand(BaseCommand):
         Args:
             command_line_arguments (Namespace): The parsed command line arguments.
         """
+        
 
+        # Saves the hyperparameters into a YAML file
+        with open(os.path.join(command_line_arguments.output_path, 'hyperparameters.yaml'), 'w', encoding='utf-8') as hyperparameters_file:
+            yaml.dump(vars(command_line_arguments), hyperparameters_file)
+       
         # Selects device for training
         device = 'cuda' if command_line_arguments.use_gpu else 'cpu'
         self.logger.info("Selected %s for  Training Process", device.upper())
         
         # Creates training data from actions captured as video frames
+        self.logger.info('Creating training data from dataset at %s', command_line_arguments.dataset_path)
         training_data, labels = create_dataset(command_line_arguments.dataset_path)
-        self.logger.info('Created Training Data from Action in Video Frames', extra={'start_section': True})
-    
+        self.logger.info('Created Training Data from Action in Video Frames')
+        
         # Creates the model for training 
+        self.logger.info('Creating model of type %s', command_line_arguments.model_type)
         if command_line_arguments.model_type == 'lstm':
             model = create_lstm_model(
                 input_size=training_data.shape[2],
@@ -44,12 +53,16 @@ class TrainActionRecognitionModelCommand(BaseCommand):
                 output_classes=len(numpy.unique(labels))
             )
         else:
-            exit('Not Supported')
+            model = create_transformer_model(
+                input_size=training_data.shape[2],
+                output_classes=len(numpy.unique(labels))
+            )
         self.logger.info(f'Using {command_line_arguments.model_type.capitalize()} for Training', extra={'start_section': True})
-        
+      
         # Creates the optimizer for training
         optimizer_kind = command_line_arguments.optimizer
         optimizer: torch.optim.SGD | torch.optim.Adam
+        self.logger.info('Creating optimizer of type %s', optimizer_kind)
         if optimizer_kind == 'sgd':
             optimizer = torch.optim.SGD(
                 params=model.parameters(),
@@ -64,9 +77,11 @@ class TrainActionRecognitionModelCommand(BaseCommand):
                 weight_decay=command_line_arguments.weight_decay
             )
         else:
+            self.logger.error('The optimizer %s is not supported', optimizer_kind)
             raise ValueError(f'The optimizer "{optimizer_kind}" is not supported.')
 
         # Setup loss and optimizer
+        self.logger.info('Setting up loss function')
         loss_function = torch.nn.CrossEntropyLoss()
 
         # Create ModelTrainer instance and train the model
@@ -83,13 +98,18 @@ class TrainActionRecognitionModelCommand(BaseCommand):
             validation_split=command_line_arguments.validation_split,
             test_split=command_line_arguments.test_split
         )
-
+        self.logger.info('Starting training for %d epochs with patience of %d epochs', command_line_arguments.epochs, command_line_arguments.patience)
         trainer.train_model(num_epochs=command_line_arguments.epochs)
         self.logger.info('Finished Training', extra={'start_section': True})
+        
+        # Evaluates the trained model on the test set
+        self.logger.info('Evaluating on test set')
         trainer.evaluate_on_test_set()
         
         # Plots the statistics of the training process
+        self.logger.info('Plotting training statistics')
         trainer.plot_metrics()
+        self.logger.info('Created statistics of the training process')
 
 
 
