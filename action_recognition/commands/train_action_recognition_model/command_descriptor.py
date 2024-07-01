@@ -180,3 +180,43 @@ class TrainActionRecognitionModelCommandDescriptor(BaseCommandDescriptor):
             default=10, 
             help='Number of epochs to wait before early stopping if validation loss does not improve. Default to 10.'
         )
+
+        parser.add_argument(
+            'O',
+            '--model_dimension',
+            type=int,
+            default=32,
+            help='The number of expected features in the encoder/decoder inputs. Default to 32.'
+        )
+        # For Transformer model
+        parser.add_argument(
+            '-n',
+            '--number_heads',
+            type=int,
+            default=2,
+            help='The number of heads in the multiheadattention models. Default to 2.'
+        )
+
+        parser.add_argument(
+            '-E',
+            '--number_encoder_layers',
+            type=int,
+            default=1,
+            help='The number of sub-encoder-layers in the encoder. Default to 1.'
+        )
+
+        parser.add_argument(
+            '-D',
+            '--number_decoder_layers',
+            type=int,
+            default=1,
+            help='The number of sub-decoder-layers in the decoder. Default to 1.'
+        )
+
+        parser.add_argument(
+            '-d',
+            '--dimension_feedforward',
+            type=int,
+            default=32,
+            help='The dimension of the feedforward network model. Default to 32.'
+        )
