@@ -120,7 +120,7 @@ class Application:
         }
         root_logger.setLevel(logging_level_map[logging_level])
         # Adds a console logging handler to the application logger and an optional file handler
-        sectioning_formatter = SectioningFormatter('%(asctime)s - %(name).45s - %(levelname)s - %(message)s')
+        sectioning_formatter = SectioningFormatter('%(asctime)s - %(name).27s - %(levelname)s - %(message)s')
         console_logging_handler = logging.StreamHandler(sys.stdout)
         console_logging_handler.setLevel(logging_level_map[logging_level])
         console_logging_handler.setFormatter(sectioning_formatter)
