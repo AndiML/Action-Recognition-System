@@ -6,14 +6,14 @@ import torch
 import numpy
 
 
-def create_dataset(dataset_path: str) -> Tuple[torch.tensor, torch.tensor]:
+def create_dataset(dataset_path: str) -> Tuple[torch.tensor, torch.tensor, dict[str, int]]:
     """Creates the dataset for the training process.
 
     Args:
         dataset_path (str): The path to the dataset directory.
 
     Returns:
-        Tuple[torch.tensor, torch.tensor]: The training data and labels.
+        Tuple[torch.tensor, torch.tensor, dict[str, int]]: The training data, labels and the dictionary, where the action gets mapped to its index.
     """
     actions = os.listdir(dataset_path)
     action_to_label = {action: idx for idx, action in enumerate(actions)}
@@ -44,6 +44,5 @@ def create_dataset(dataset_path: str) -> Tuple[torch.tensor, torch.tensor]:
     training_data = torch.tensor(training_data, dtype=torch.float32)
     labels = torch.tensor(labels, dtype=torch.long)
 
-    return training_data, labels
-
+    return training_data, labels, action_to_label
 
