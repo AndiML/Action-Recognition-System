@@ -5,7 +5,7 @@ import torch.nn as nn
 from action_recognition.src.nn.base_model import BaseModel
 
 
-class Transformer(BaseModel):
+class ActionRecognitionTransformer(BaseModel):
     """Represents a Transformer model architecture for action recognition on time series data."""
 
     model_id = 'transformer'
@@ -15,39 +15,37 @@ class Transformer(BaseModel):
         self,
         input_dim: int,
         num_classes: int, 
-        d_model: int = 32, 
-        nhead: int = 2, 
-        num_encoder_layers: int = 1, 
-        num_decoder_layers: int = 1, 
-        dim_feedforward: int = 32, 
-        dropout: float = 0.1
+        model_dimension: int = 32, 
+        number_heads: int = 2, 
+        number_encoder_layers: int = 1, 
+        number_decoder_layers: int = 1, 
+        dimension_feedforward: int = 32, 
     ) -> None:
         """Initializes a new Transformer instance.
 
         Args:
             input_dim (int): The dimension of the input vectors.
             num_classes (int): The number of classes between which the model has to differentiate.
-            d_model (int): The number of expected features in the encoder/decoder inputs.
-            nhead (int): The number of heads in the multiheadattention models.
+            model_dimension (int): The number of expected features in the encoder/decoder inputs.
+            number_heads (int): The number of heads in the multiheadattention models.
             num_encoder_layers (int): The number of sub-encoder-layers in the encoder.
             num_decoder_layers (int): The number of sub-decoder-layers in the decoder.
             dim_feedforward (int): The dimension of the feedforward network model.
-            dropout (float): The dropout value.
         """
-        super(Transformer, self).__init__()
+        super(ActionRecognitionTransformer, self).__init__()
 
         self.input_dim = input_dim
-        self.d_model = d_model
+        self.model_dimension = model_dimension
         self.num_classes = num_classes
 
-        self.embedding = nn.Linear(input_dim, d_model)
-        self.positional_encoding = PositionalEncoding(d_model, dropout)
+        self.embedding = nn.Linear(input_dim, model_dimension)
+        self.positional_encoding = PositionalEncoding(model_dimension)
 
         self.transformer = nn.Transformer(
-            d_model, nhead, num_encoder_layers, num_decoder_layers, dim_feedforward, dropout
+            model_dimension, number_heads, number_encoder_layers, number_decoder_layers, dimension_feedforward
         )
 
-        self.fc_out = nn.Linear(d_model, num_classes)
+        self.fc_out = nn.Linear(model_dimension, num_classes)
 
     def forward(self, src: torch.Tensor) -> torch.Tensor:
         """Performs the forward pass through the model.
@@ -67,7 +65,7 @@ class Transformer(BaseModel):
             src, src,
             src_key_padding_mask=src_key_padding_mask
         )
-
+        # Extracts information for the last time step
         output = self.fc_out(transformer_output[:, -1, :])
         return output
 
@@ -80,25 +78,40 @@ class Transformer(BaseModel):
         Returns:
             torch.Tensor: Returns the padding mask.
         """
-        # Assuming 0 is used for padding in the input sequences
         padding_mask = (src == 0).all(dim=-1).T
-        return padding_mask  # Shape: [batch_size, seq_len]
+        return padding_mask 
 
 
 class PositionalEncoding(nn.Module):
     """Injects some information about the relative or absolute position of the tokens in the sequence."""
-    def __init__(self, d_model: int, dropout: float = 0.1, max_len: int = 5000):
+    
+    def __init__(self, model_dimension: int, maximum_length: int = 5000) -> None:
+        """
+        Initializes the PositionalEncoding instance.
+        
+        Args:
+            model_dimension (int): The dimension of the model (number of expected features in the input).
+            maximum_length (int): The maximum length of the sequences to be encoded. Default is 5000.
+        """
         super(PositionalEncoding, self).__init__()
-        self.dropout = nn.Dropout(p=dropout)
 
-        pe = torch.zeros(max_len, d_model)
-        position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
-        div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-torch.log(torch.tensor(10000.0)) / d_model))
+        pe = torch.zeros(maximum_length, model_dimension)
+        position = torch.arange(0, maximum_length, dtype=torch.float).unsqueeze(1)
+        div_term = torch.exp(torch.arange(0, model_dimension, 2).float() * (-torch.log(torch.tensor(10000.0)) / model_dimension))
         pe[:, 0::2] = torch.sin(position * div_term)
         pe[:, 1::2] = torch.cos(position * div_term)
         pe = pe.unsqueeze(0).transpose(0, 1)
         self.register_buffer('pe', pe)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Adds positional encoding to the input tensor.
+        
+        Args:
+            x (torch.Tensor): The input tensor of shape (sequence_length, batch_size, model_dimension).
+        
+        Returns:
+            torch.Tensor: The input tensor with positional encodings added, of the same shape as input.
+        """
         x = x + self.pe[:x.size(0), :]
-        return self.dropout(x)
+        return x
