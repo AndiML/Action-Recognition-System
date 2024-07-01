@@ -31,14 +31,14 @@ class TrainActionRecognitionModelCommand(BaseCommand):
         
         # Selects device for training
         device = 'cuda' if command_line_arguments.use_gpu else 'cpu'
-        self.logger.info("Selected %s for  Training Process", device.upper())
+        self.logger.info("Selected %s for  Training Process", device.upper(),extra={'start_section': True})
         
         # Creates training data from actions captured as video frames
-        self.logger.info('Creating training data from dataset at %s', command_line_arguments.dataset_path)
+        self.logger.info('Creating training data from dataset at %s', command_line_arguments.dataset_path, extra={'start_section': True})
         training_data, labels, action_to_label = create_dataset(command_line_arguments.dataset_path)
-        self.logger.info('Created Training Data from Action in Video Frames')
+        self.logger.info('Created Training Data from Action in Video Frames', extra={'start_section': True})
 
-        self.logger.info('Saves Hyperparameters into a YAML File')
+        self.logger.info('Saves Hyperparameters into a YAML File', extra={'start_section': True})
         # Add input dimension directly to command line arguments
         command_line_arguments.input_dimension = training_data.shape[2]
         # Create a combined dictionary to store both command line arguments and my_dictionary under a specific key
@@ -48,10 +48,10 @@ class TrainActionRecognitionModelCommand(BaseCommand):
         }
         with open(os.path.join(command_line_arguments.output_path, 'hyperparameters.yaml'), 'w', encoding='utf-8') as hyperparameters_file:
             yaml.dump(combined_data, hyperparameters_file, default_flow_style=False)
-        self.logger.info('Finished Saving Hyperparameters into a YAML File')
+        self.logger.info('Finished Saving Hyperparameters into a YAML File', extra={'start_section': True})
       
         # Creates the model for training 
-        self.logger.info('Creating model of type %s', command_line_arguments.model_type)
+        self.logger.info('Creating model of type %s', command_line_arguments.model_type, extra={'start_section': True})
         if command_line_arguments.model_type == 'lstm':
             model = create_lstm_model(
                 input_size=training_data.shape[2],
@@ -75,7 +75,7 @@ class TrainActionRecognitionModelCommand(BaseCommand):
         # Creates the optimizer for training
         optimizer_kind = command_line_arguments.optimizer
         optimizer: torch.optim.SGD | torch.optim.Adam
-        self.logger.info('Creating optimizer of type %s', optimizer_kind)
+        self.logger.info('Creating optimizer of type %s', optimizer_kind, extra={'start_section': True})
         if optimizer_kind == 'sgd':
             optimizer = torch.optim.SGD(
                 params=model.parameters(),
@@ -94,7 +94,7 @@ class TrainActionRecognitionModelCommand(BaseCommand):
             raise ValueError(f'The optimizer "{optimizer_kind}" is not supported.')
 
         # Setup loss and optimizer
-        self.logger.info('Setting up loss function')
+        self.logger.info('Setting up loss function', extra={'start_section': True})
         loss_function = torch.nn.CrossEntropyLoss()
 
         # Create ModelTrainer instance and train the model
@@ -111,18 +111,18 @@ class TrainActionRecognitionModelCommand(BaseCommand):
             validation_split=command_line_arguments.validation_split,
             test_split=command_line_arguments.test_split
         )
-        self.logger.info('Starting training for %d epochs with patience of %d epochs', command_line_arguments.epochs, command_line_arguments.patience)
+        self.logger.info('Starting Training for %d Epochs with Patience of %d Epochs', command_line_arguments.epochs, command_line_arguments.patience, extra={'start_section': True})
         trainer.train_model(num_epochs=command_line_arguments.epochs)
         self.logger.info('Finished Training', extra={'start_section': True})
         
         # Evaluates the trained model on the test set
-        self.logger.info('Evaluating on test set')
+        self.logger.info('Evaluating on Test Set', extra={'start_section': True})
         trainer.evaluate_on_test_set()
+        self.logger.info('Finished Evaluation on Test Set', extra={'start_section': True})
         
         # Plots the statistics of the training process
-        self.logger.info('Plotting training statistics')
         trainer.plot_metrics()
-        self.logger.info('Created statistics of the training process')
+        self.logger.info('Created Statistics of the Training Process', extra={'start_section': True})
 
 
 
