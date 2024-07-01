@@ -2,7 +2,7 @@ import cv2
 import mediapipe
 import numpy
 
-from visualization import LandmarkDrawer
+from action_recognition.src.visualization import LandmarkDrawer
 
 
 class HolisticPoseProcessor:
