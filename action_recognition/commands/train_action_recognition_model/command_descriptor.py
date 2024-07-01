@@ -182,7 +182,7 @@ class TrainActionRecognitionModelCommandDescriptor(BaseCommandDescriptor):
         )
 
         parser.add_argument(
-            'O',
+            '-O',
             '--model_dimension',
             type=int,
             default=32,
@@ -204,17 +204,8 @@ class TrainActionRecognitionModelCommandDescriptor(BaseCommandDescriptor):
             default=1,
             help='The number of sub-encoder-layers in the encoder. Default to 1.'
         )
-
         parser.add_argument(
-            '-D',
-            '--number_decoder_layers',
-            type=int,
-            default=1,
-            help='The number of sub-decoder-layers in the decoder. Default to 1.'
-        )
-
-        parser.add_argument(
-            '-d',
+            '-F',
             '--dimension_feedforward',
             type=int,
             default=32,

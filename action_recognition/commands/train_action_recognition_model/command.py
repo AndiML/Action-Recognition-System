@@ -29,20 +29,25 @@ class TrainActionRecognitionModelCommand(BaseCommand):
             command_line_arguments (Namespace): The parsed command line arguments.
         """
         
-
-        # Saves the hyperparameters into a YAML file
-        with open(os.path.join(command_line_arguments.output_path, 'hyperparameters.yaml'), 'w', encoding='utf-8') as hyperparameters_file:
-            yaml.dump(vars(command_line_arguments), hyperparameters_file)
-       
         # Selects device for training
         device = 'cuda' if command_line_arguments.use_gpu else 'cpu'
         self.logger.info("Selected %s for  Training Process", device.upper())
         
         # Creates training data from actions captured as video frames
         self.logger.info('Creating training data from dataset at %s', command_line_arguments.dataset_path)
-        training_data, labels = create_dataset(command_line_arguments.dataset_path)
+        training_data, labels, action_to_label = create_dataset(command_line_arguments.dataset_path)
         self.logger.info('Created Training Data from Action in Video Frames')
-        
+
+        # Create a combined dictionary to store both command line arguments and my_dictionary under a specific key
+        self.logger.info('Saves Hyperparameters into a YAML File')
+        combined_data = {
+            'command_line_arguments': vars(command_line_arguments),
+            'action': action_to_label
+        }
+        with open(os.path.join(command_line_arguments.output_path, 'hyperparameters.yaml'), 'w', encoding='utf-8') as hyperparameters_file:
+            yaml.dump(combined_data, hyperparameters_file, default_flow_style=False)
+        self.logger.info('Finished Saving Hyperparameters into a YAML File')
+
         # Creates the model for training 
         self.logger.info('Creating model of type %s', command_line_arguments.model_type)
         if command_line_arguments.model_type == 'lstm':
