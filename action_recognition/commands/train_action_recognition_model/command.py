@@ -38,16 +38,18 @@ class TrainActionRecognitionModelCommand(BaseCommand):
         training_data, labels, action_to_label = create_dataset(command_line_arguments.dataset_path)
         self.logger.info('Created Training Data from Action in Video Frames')
 
-        # Create a combined dictionary to store both command line arguments and my_dictionary under a specific key
         self.logger.info('Saves Hyperparameters into a YAML File')
+        # Add input dimension directly to command line arguments
+        command_line_arguments.input_dimension = training_data.shape[2]
+        # Create a combined dictionary to store both command line arguments and my_dictionary under a specific key
         combined_data = {
             'command_line_arguments': vars(command_line_arguments),
-            'action': action_to_label
+            'action': action_to_label,
         }
         with open(os.path.join(command_line_arguments.output_path, 'hyperparameters.yaml'), 'w', encoding='utf-8') as hyperparameters_file:
             yaml.dump(combined_data, hyperparameters_file, default_flow_style=False)
         self.logger.info('Finished Saving Hyperparameters into a YAML File')
-
+      
         # Creates the model for training 
         self.logger.info('Creating model of type %s', command_line_arguments.model_type)
         if command_line_arguments.model_type == 'lstm':
