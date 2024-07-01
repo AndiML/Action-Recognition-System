@@ -32,7 +32,6 @@ def create_transformer_model(
     model_dimension: int = 32, 
     number_heads: int = 2, 
     number_encoder_layers: int = 1, 
-    number_decoder_layers: int = 1, 
     dimension_feedforward: int = 32
 ) -> torch.nn.Module:
     """Creates the Transformer model for the training process.
@@ -43,7 +42,6 @@ def create_transformer_model(
         model_dimension (int): The number of expected features in the encoder/decoder inputs.
         number_heads (int): The number of heads in the multiheadattention models.
         number_encoder_layers (int): The number of sub-encoder-layers in the encoder.
-        number_decoder_layers (int): The number of sub-decoder-layers in the decoder.
         dimension_feedforward (int): The dimension of the feedforward network model.
     
     Returns:
@@ -55,7 +53,6 @@ def create_transformer_model(
         model_dimension=model_dimension,
         number_heads=number_heads,
         number_encoder_layers=number_encoder_layers,
-        number_decoder_layers=number_decoder_layers,
         dimension_feedforward=dimension_feedforward
     )
     return model

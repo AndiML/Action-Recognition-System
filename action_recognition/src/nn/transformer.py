@@ -18,19 +18,17 @@ class ActionRecognitionTransformer(BaseModel):
         model_dimension: int = 32, 
         number_heads: int = 2, 
         number_encoder_layers: int = 1, 
-        number_decoder_layers: int = 1, 
         dimension_feedforward: int = 32, 
     ) -> None:
-        """Initializes a new Transformer instance.
+        """Initializes a new ActionRecognitionTransformer instance.
 
         Args:
             input_dim (int): The dimension of the input vectors.
             num_classes (int): The number of classes between which the model has to differentiate.
-            model_dimension (int): The number of expected features in the encoder/decoder inputs.
+            model_dimension (int): The number of expected features in the encoder inputs.
             number_heads (int): The number of heads in the multiheadattention models.
-            num_encoder_layers (int): The number of sub-encoder-layers in the encoder.
-            num_decoder_layers (int): The number of sub-decoder-layers in the decoder.
-            dim_feedforward (int): The dimension of the feedforward network model.
+            number_encoder_layers (int): The number of sub-encoder-layers in the encoder.
+            dimension_feedforward (int): The dimension of the feedforward network model.
         """
         super(ActionRecognitionTransformer, self).__init__()
 
@@ -41,9 +39,10 @@ class ActionRecognitionTransformer(BaseModel):
         self.embedding = nn.Linear(input_dim, model_dimension)
         self.positional_encoding = PositionalEncoding(model_dimension)
 
-        self.transformer = nn.Transformer(
-            model_dimension, number_heads, number_encoder_layers, number_decoder_layers, dimension_feedforward
+        encoder_layers = nn.TransformerEncoderLayer(
+            model_dimension, number_heads, dimension_feedforward
         )
+        self.transformer_encoder = nn.TransformerEncoder(encoder_layers, number_encoder_layers)
 
         self.fc_out = nn.Linear(model_dimension, num_classes)
 
@@ -56,16 +55,15 @@ class ActionRecognitionTransformer(BaseModel):
         Returns:
             torch.Tensor: Returns the outputs of the model.
         """
-        src = self.embedding(src) * torch.sqrt(torch.tensor(self.d_model, dtype=torch.float32))
+        src = self.embedding(src) * torch.sqrt(torch.tensor(self.model_dimension, dtype=torch.float32))
         src = self.positional_encoding(src)
 
         src_key_padding_mask = self.generate_padding_mask(src)
 
-        transformer_output = self.transformer(
-            src, src,
-            src_key_padding_mask=src_key_padding_mask
+        transformer_output = self.transformer_encoder(
+            src, src_key_padding_mask=src_key_padding_mask
         )
-        # Extracts information for the last time step
+
         output = self.fc_out(transformer_output[:, -1, :])
         return output
 
