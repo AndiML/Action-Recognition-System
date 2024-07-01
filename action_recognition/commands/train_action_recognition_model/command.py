@@ -52,11 +52,17 @@ class TrainActionRecognitionModelCommand(BaseCommand):
                 fc_sizes=command_line_arguments.fc_sizes, 
                 output_classes=len(numpy.unique(labels))
             )
-        else:
+        elif command_line_arguments.model_type == 'transformer':
             model = create_transformer_model(
                 input_size=training_data.shape[2],
+                model_dimension=command_line_arguments.model_dimension,
+                number_heads=command_line_arguments.number_heads,
+                number_encoder_layers=command_line_arguments.number_encoder_layers,
+                dimension_feedforward=command_line_arguments.dimension_feedforward,
                 output_classes=len(numpy.unique(labels))
             )
+        else:
+            exit('Architecture not supported.')
         self.logger.info(f'Using {command_line_arguments.model_type.capitalize()} for Training', extra={'start_section': True})
       
         # Creates the optimizer for training
