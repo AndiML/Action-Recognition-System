@@ -3,8 +3,10 @@ import logging
 from typing import Tuple
 from matplotlib import pyplot as plt
 
+import numpy
 import torch
 import torch.utils.data
+import torch.nn.functional as F
 
 
 class ModelTrainer:
@@ -12,11 +14,11 @@ class ModelTrainer:
         self,
         output_path: str,
         model: torch.nn.Module,
-        criterion: torch.nn.Module,
+        loss_function: torch.nn.Module,
         optimizer: torch.optim.Optimizer,
         device: str,
         logger: logging.Logger,
-        data: torch.Tensor,
+        training_data: torch.Tensor,
         labels: torch.Tensor,
         test_split: float = 0.1,
         validation_split: float = 0.1,
@@ -28,11 +30,11 @@ class ModelTrainer:
         Args:
             output_path (str): Path to save the best model and training statistics.
             model (torch.nn.Module): The neural network model to train.
-            criterion (torch.nn.Module): Loss function to calculate loss.
+            loss_function (torch.nn.Module): Loss function to calculate loss.
             optimizer (torch.optim.Optimizer): Optimizer for updating model parameters.
             device (str): The device where training and inference are carried out.
             logger (logging.Logger): Logger for logging training information.
-            data (torch.Tensor): Tensor containing the data.
+            training_data (torch.Tensor): Tensor containing the data.
             labels (torch.Tensor): Tensor containing the labels corresponding to the data.
             test_split (float): Fraction of the data to be used as test set (default: 0.1).
             validation_split (float): Fraction of the data to be used as validation set (default: 0.1).
@@ -40,21 +42,27 @@ class ModelTrainer:
         """
         self.output_path = output_path
         self.model = model
-        self.criterion = criterion
+        self.loss_function = loss_function
         self.optimizer = optimizer
         self.device = device
         self.logger = logger
         self.model.to(self.device)
         self.val_losses: list[float] = []
         self.val_accuracies: list[float] = []
+        self.test_loss = None
+        self.test_accuracy = None
 
         self.train_loader, self.val_loader, self.test_loader = self.create_dataloaders(
-            data, labels, batch_size, validation_split, test_split
+            training_data, 
+            labels, 
+            batch_size, 
+            validation_split, 
+            test_split
         )
 
     def create_dataloaders(
         self,
-        data: torch.Tensor,
+        training_data: torch.Tensor,
         labels: torch.Tensor,
         batch_size: int = 32,
         validation_split: float = 0.1,
@@ -64,7 +72,7 @@ class ModelTrainer:
         Create PyTorch DataLoader instances for training, validation, and test sets.
 
         Args:
-            data (torch.Tensor): Tensor containing the data.
+            training_data (torch.Tensor): Tensor containing the data.
             labels (torch.Tensor): Tensor containing the labels corresponding to the data.
             batch_size (int): Batch size for DataLoader (default: 32).
             validation_split (float): Fraction of the data to be used as validation set (default: 0.1).
@@ -75,7 +83,7 @@ class ModelTrainer:
             val_loader (torch.utils.data.DataLoader): DataLoader for validation set.
             test_loader (torch.utils.data.DataLoader): DataLoader for test set.
         """
-        dataset = torch.utils.data.TensorDataset(data, labels)
+        dataset = torch.utils.data.TensorDataset(training_data, labels)
         test_size = int(len(dataset) * test_split)
         val_size = int(len(dataset) * validation_split)
         train_size = len(dataset) - test_size - val_size
@@ -110,7 +118,7 @@ class ModelTrainer:
             for inputs, labels in loader:
                 inputs, labels = inputs.to(self.device), labels.to(self.device)
                 outputs = self.model(inputs)
-                loss = self.criterion(outputs, labels)
+                loss = self.loss_function(outputs, labels)
                 total_loss += loss.item()
 
                 _, predicted = torch.max(outputs, 1)
@@ -148,7 +156,7 @@ class ModelTrainer:
                 inputs, labels = inputs.to(self.device), labels.to(self.device)
                 self.optimizer.zero_grad()
                 outputs = self.model(inputs)
-                loss = self.criterion(outputs, labels)
+                loss = self.loss_function(outputs, labels)
                 loss.backward()
                 self.optimizer.step()
                 running_loss += loss.item() * inputs.size(0)
@@ -178,7 +186,6 @@ class ModelTrainer:
     def plot_metrics(self) -> None:
         """Plot the validation loss and validation accuracy."""
         epochs = range(1, len(self.val_losses) + 1)
-
         plt.figure(figsize=(15, 7))
 
         plt.subplot(1, 2, 1)
@@ -194,18 +201,39 @@ class ModelTrainer:
         plt.xlabel('Epochs')
         plt.ylabel('Accuracy')
         plt.legend()
+       
+        # Display test metrics
+        if self.test_loss is not None and self.test_accuracy is not None:
+            plt.figtext(0.5, 0.01, f'Test Loss: {self.test_loss:.4f}, Test Accuracy: {self.test_accuracy:.4f}', 
+                        wrap=True, horizontalalignment='center', fontsize=12)
 
         plt.tight_layout()
         plt.savefig(os.path.join(self.output_path, 'statistics.png'))
 
-    def evaluate_on_test_set(self) -> Tuple[float, float]:
+    def evaluate_on_test_set(self) -> None:
+        """ Evaluate the model on the test set."""
+        test_loss, test_accuracy = self.evaluate_model(self.test_loader)
+        self.logger.info(f'Test Loss: {test_loss:.4f}, Test Accuracy: {test_accuracy:.4f}',  extra={'start_section': True})
+        self.test_loss = test_loss
+        self.test_accuracy = test_accuracy
+
+    def predict_action(self, keypoints: numpy.ndarray) -> Tuple[int, float]:
         """
-        Evaluate the model on the test set.
+        Predict the action for a given set of keypoints.
+
+        Args:
+            keypoints (np.ndarray): Array of keypoints for a single frame.
 
         Returns:
-            test_loss (float): Average loss on the test set.
-            test_accuracy (float): Accuracy on the test set.
+            Tuple[int, float]: Predicted action class and its probability.
         """
-        test_loss, test_accuracy = self.evaluate_model(self.test_loader)
-        self.logger.info(f'Test Loss: {test_loss:.4f}, Test Accuracy: {test_accuracy:.4f}')
-        return test_loss, test_accuracy
+        keypoints_tensorized = torch.from_numpy(keypoints).float().unsqueeze(0).to(self.device) 
+        self.model.eval()
+        with torch.no_grad():
+            output = self.model(keypoints_tensorized)
+            probabilities = F.softmax(output, dim=1)
+            _, predicted = torch.max(output, 1)
+        
+        predicted_class = predicted.item()
+        predicted_probability = probabilities[0, predicted_class].item()
+        return predicted_class, predicted_probability
