@@ -1,4 +1,4 @@
-"""Represents a module that contains the vanilla federated averaging command."""
+"""Represents a module that contains the generate action data command."""
 
 import logging
 import os
@@ -12,11 +12,11 @@ from action_recognition.commands.base import BaseCommand
 from action_recognition.src.holistic_processor import HolisticPoseProcessor
 
 
-class DataGeneratorCommand(BaseCommand):
+class GenerateActionDataCommand(BaseCommand):
     """Represents a command that represents the data generation process."""
 
     def __init__(self) -> None:
-        """Initializes a new DataGenerator instance. """
+        """Initializes a new GenerateActionData instance. """
 
         self.logger = logging.getLogger(__name__ + '.' + self.__class__.__name__)
 

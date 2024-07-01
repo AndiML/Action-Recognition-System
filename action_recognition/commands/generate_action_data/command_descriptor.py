@@ -1,14 +1,12 @@
-"""Represents a module that contains the descriptor for the federated-averaging command."""
+"""Represents a module that contains the descriptor for the generate-action-data command."""
 
 from argparse import ArgumentParser
 
 from action_recognition.commands.base import BaseCommandDescriptor
-# from action_recognition.src.datasets import DATASET_IDS, DEFAULT_DATASET_ID
-#from action_recognition.src.nn import DEFAULT_MODEL_ID, MODEL_IDS
 
 
-class DataGeneratorCommandDescriptor(BaseCommandDescriptor):
-    """Represents the description of data generation command."""
+class GenerateActionDataCommandDescriptor(BaseCommandDescriptor):
+    """Represents the description of generate-action-data command."""
 
     def get_name(self) -> str:
         """Gets the name of the command.
@@ -17,7 +15,7 @@ class DataGeneratorCommandDescriptor(BaseCommandDescriptor):
             str: Returns the name of the command.
         """
 
-        return 'data-generator'
+        return 'generate-action-data'
 
     def get_description(self) -> str:
         """Gets the description of the command.
