@@ -1,4 +1,4 @@
-# Action Recognition Framework README
+# Action Recognition Framework
 
 ## Overview
 The Action Recognition Framework is designed to facilitate the generation of action recognition data and the training of action recognition models. It comprises two main components: the `GenerateActionDataCommand` for generating training data and the `TrainActionRecognitionModelCommand` for training models. The framework is built using Python and leverages OpenCV for video capture, numpy for data manipulation, and PyTorch for model training.
@@ -20,8 +20,8 @@ The Action Recognition Framework is designed to facilitate the generation of act
 ## Installation
 To install the Action Recognition Framework, clone the repository and install the required dependencies:
 ```bash
-git clone https://github.com/your-repo/action-recognition-framework.git
-cd action-recognition-framework
+git clone git@github.com:AndiML/Generated-Action-Recognition.git
+cd Generated-Action-Recognition
 pip install -r requirements.txt
 ```
 
