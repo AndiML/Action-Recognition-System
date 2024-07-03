@@ -18,7 +18,7 @@ The Action Recognition Framework is designed to facilitate the generation of act
 ## Installation
 To install the Action Recognition Framework, clone the repository and install the required dependencies:
 ```bash
-git clone git@github.com:AndiML/Generated-Action-Recognition.git
+git clone git@github.com:AndiML/Action-Recognition-System.git
 cd Action-Recognition-System
 pip install -r requirements.txt
 ```
