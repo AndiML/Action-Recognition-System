@@ -108,4 +108,4 @@ Parameters:
 The framework uses Python's built-in logging module to provide detailed logs of the data generation, training, and inference processes. Logs include information about the creation of directories, frame capture statuses, model training progress, and more.
 
 ## License
-This project is licensed under the MIT License. See the LICENSE file for more details.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
