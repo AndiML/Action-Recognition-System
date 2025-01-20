@@ -3,6 +3,21 @@
 ## Overview
 The Action Recognition Framework is designed to facilitate the generation of action recognition data and the training of action recognition models. It comprises three main components: the `GenerateActionDataCommand` for generating training data, the `TrainActionRecognitionModelCommand` for training models, and the `TestActionRecognitionModelCommand` for inference. The framework is built using Python and leverages OpenCV for video capture, numpy for data manipulation, and PyTorch for model training and inference. It also uses the MediaPipe model for holistic pose and keypoint extraction.
 
+# Action Recognition Framework
+
+![Build Status](https://github.com/AndiML/Action-Recognition-System/workflows/CI/badge.svg)
+![License](https://img.shields.io/badge/License-MIT-yellow.svg)
+![PyPI](https://img.shields.io/pypi/v/action-recognition-system.svg)
+![Python Version](https://img.shields.io/badge/python-3.8%2C%203.9%2C%203.10-blue.svg)
+[![codecov](https://codecov.io/gh/AndiML/Action-Recognition-System/branch/main/graph/badge.svg)](https://codecov.io/gh/AndiML/Action-Recognition-System)
+![GitHub issues](https://img.shields.io/github/issues/AndiML/Action-Recognition-System.svg)
+![GitHub stars](https://img.shields.io/github/stars/AndiML/Action-Recognition-System.svg?style=social&label=Stars)
+![GitHub forks](https://img.shields.io/github/forks/AndiML/Action-Recognition-System.svg?style=social&label=Fork)
+![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue.svg)
+![Contributors](https://img.shields.io/github/contributors/AndiML/Action-Recognition-System.svg)
+
+
+
 ## Table of Contents
 - [Installation](#installation)
 - [Usage](#usage)
