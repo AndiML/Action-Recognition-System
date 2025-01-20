@@ -5,7 +5,6 @@ The Action Recognition Framework is designed to facilitate the generation of act
 
 # Action Recognition Framework
 
-![Build Status](https://github.com/AndiML/Action-Recognition-System/workflows/CI/badge.svg)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![PyPI](https://img.shields.io/pypi/v/action-recognition-system.svg)
 ![Python Version](https://img.shields.io/badge/python-3.8%2C%203.9%2C%203.10-blue.svg)
