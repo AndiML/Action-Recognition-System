@@ -17,6 +17,7 @@ The Action Recognition Framework is designed to facilitate the generation of act
   - [Table of Contents](#table-of-contents)
   - [Installation](#installation)
   - [Usage](#usage)
+    - [Generating Action Data](#generating-action-data)
     - [Training the Action Recognition Model](#training-the-action-recognition-model)
       - [LSTM Model](#lstm-model)
       - [Transformer Model](#transformer-model)
@@ -46,7 +47,7 @@ When you install new packages, please update the environment file like so:
 
 ```bash
 conda env export | grep -v "prefix" | grep -v "numpy" > environment.yaml
-
+```
 
 
 ### Generating Action Data
