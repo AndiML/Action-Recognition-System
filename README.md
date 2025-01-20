@@ -1,10 +1,9 @@
 # Action Recognition Framework
 
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](#license) 
-[![Python Version](https://img.shields.io/badge/python-3.8%2C%203.9%2C%203.10-blue.svg)](https://www.python.org/downloads/) 
 [![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=fff)](#)
 ![GitHub stars](https://img.shields.io/github/stars/AndiML/Action-Recognition-System.svg?style=social&label=Stars)
 ![Contributors](https://img.shields.io/github/contributors/AndiML/Action-Recognition-System.svg)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](#license) 
 
 
 ## Overview
