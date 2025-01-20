@@ -12,16 +12,17 @@ The Action Recognition Framework is designed to facilitate the generation of act
 
 
 ## Table of Contents
-- [Installation](#installation)
-- [Usage](#usage)
-  - [Generating Action Data](#generating-action-data)
-  - [Training the Action Recognition Model](#training-the-action-recognition-model)
-  - [Inference Using the Action Recognition Model](#inference-using-the-action-recognition-model)
-- [Command Line Arguments](#command-line-arguments)
-  - [GenerateActionDataCommand Arguments](#generateactiondatacommand-arguments)
-  - [TrainActionRecognitionModelCommand Arguments](#trainactionrecognitionmodelcommand-arguments)
-- [Logging](#logging)
-- [License](#license)
+- [Action Recognition Framework](#action-recognition-framework)
+  - [Overview](#overview)
+  - [Table of Contents](#table-of-contents)
+  - [Installation](#installation)
+  - [Usage](#usage)
+    - [Training the Action Recognition Model](#training-the-action-recognition-model)
+      - [LSTM Model](#lstm-model)
+      - [Transformer Model](#transformer-model)
+    - [Inference Using the Action Recognition Model](#inference-using-the-action-recognition-model)
+  - [Logging](#logging)
+  - [License](#license)
 
 ## Installation
 To install the Action Recognition Framework, clone the repository and install the required dependencies:
@@ -32,6 +33,21 @@ pip install -r requirements.txt
 ```
 
 ## Usage
+
+To use the project, the environment it must be activate first. After using the environment it has to be deactivated:
+
+```bash
+conda activate action-recognition
+python -m  action-recognition <arguments...>
+conda deactivate
+```
+
+When you install new packages, please update the environment file like so:
+
+```bash
+conda env export | grep -v "prefix" | grep -v "numpy" > environment.yaml
+
+
 
 ### Generating Action Data
 To generate action data, use the `GenerateActionDataCommand`. This command captures video frames of specified actions and stores the extracted keypoints using the MediaPipe model for holistic pose and keypoint extraction.
